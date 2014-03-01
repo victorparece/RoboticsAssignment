@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.io.*;
 
 /**
@@ -21,7 +22,7 @@ public class GridWorld
      * 1's are walkable areas and 0's are non-walkable areas.
      * @param inputFile
      */
-    private GridWorld(String inputFile)
+    public GridWorld(String inputFile)
     {
         try {
             BufferedReader br = new BufferedReader(new FileReader(inputFile));
@@ -74,12 +75,11 @@ public class GridWorld
 
     /**
      * Indicates if the location in the GridWorld is Walkable
-     * @param locationY
-     * @param locationX
-     * @return
+     * @param location
+     * @return Returns true if the location is walkable
      */
-    public boolean IsWalkable(int locationY, int locationX)
+    public boolean IsWalkable(Point location)
     {
-        return gridWorld[locationY][locationX].IsWalkable();
+        return gridWorld[(int)location.getY()][(int)location.getX()].IsWalkable();
     }
 }
