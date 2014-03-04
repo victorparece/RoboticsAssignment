@@ -57,4 +57,16 @@ public class GridLocation
     {
         this.isWalkable = isWalkable;
     }
+
+    /**
+     * Return the string representation of the GridLocation
+     * @return
+     */
+    public String toString()
+    {
+        if (isWalkable)
+            return "1";
+        else
+            return "0";
+    }
 }

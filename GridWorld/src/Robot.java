@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -37,7 +38,18 @@ public class Robot
      */
     public Robot(GridWorld gridWorld)
     {
+        Random random = new Random();
         this.gridWorld = gridWorld;
+        Point location;
+
+        //Find a random walkable start location
+        do {
+            int x = random.nextInt(gridWorld.GetWidth());
+            int y = random.nextInt(gridWorld.GetHeight());
+            location = new Point(x, y);
+        } while (!gridWorld.IsWalkable(location));
+
+        this.location = location;
     }
 
     /**
@@ -69,7 +81,7 @@ public class Robot
             double n = random.nextDouble();
             //15% chance to take a random action
             if (n < 0.15)
-                direction = GetRandomDirection();
+                direction = GetRandomWalkableDirection();
             //15% chance to remain in place
             else if (n < 0.30)
                 return true;
@@ -81,22 +93,22 @@ public class Robot
         switch (direction)
         {
             case UP:
-                newLocation = new Point((int)location.getY()-1, (int)location.getX());
+                newLocation = new Point((int)location.getX(), (int)location.getY()-1);
                 if (!gridWorld.IsWalkable(newLocation))
                     return false;
                 break;
             case DOWN:
-                newLocation = new Point((int)location.getY()+1, (int)location.getX());
+                newLocation = new Point((int)location.getX(), (int)location.getY()+1);
                 if (!gridWorld.IsWalkable(newLocation))
                     return false;
                 break;
             case LEFT:
-                newLocation = new Point((int)location.getY(), (int)location.getX()-1);
+                newLocation = new Point((int)location.getX()-1, (int)location.getY());
                 if (!gridWorld.IsWalkable(newLocation))
                     return false;
                 break;
             case RIGHT:
-                newLocation = new Point((int)location.getY(), (int)location.getX()+1);
+                newLocation = new Point((int)location.getX()+1, (int)location.getY());
                 if (!gridWorld.IsWalkable(newLocation))
                     return false;
                 break;
@@ -110,27 +122,17 @@ public class Robot
     }
 
     /**
-     * Gets a random Direction
-     * @return Returns a Direction selected at random
+     * Gets a random Direction that is walkable from the current location
+     * @return Returns a walkable Direction selected at random
      */
-    private Direction GetRandomDirection()
+    private Direction GetRandomWalkableDirection()
     {
         Random random = new Random();
-        int m = random.nextInt(4);
-        switch (m)
-        {
-            case 0:
-                return Direction.UP;
-            case 1:
-                return Direction.DOWN;
-            case 2:
-                return Direction.LEFT;
-            case 3:
-                return Direction.RIGHT;
-            //This should never happen
-            default:
-                return Direction.DOWN;
-        }
+
+        //Get all possible walkable directions
+        ArrayList<Direction> walkableDirections = GetWalkableDirections();
+
+        return walkableDirections.get(random.nextInt(walkableDirections.size()));
     }
 
     /**
@@ -140,5 +142,28 @@ public class Robot
     public Point GetLocation()
     {
         return location;
+    }
+
+    /**
+     * Gets all walkable directions adjacent to the current location
+     * @return Returns a list of adjacent walkable directions
+     */
+    public ArrayList<Direction> GetWalkableDirections()
+    {
+        ArrayList<Direction> walkableDirections = new ArrayList<Direction>();
+
+        if (gridWorld.IsWalkable(new Point((int)location.getX()+1, (int)location.getY())))
+            walkableDirections.add(Direction.RIGHT);
+
+        if (gridWorld.IsWalkable(new Point((int)location.getX()-1, (int)location.getY())))
+            walkableDirections.add(Direction.LEFT);
+
+        if (gridWorld.IsWalkable(new Point((int)location.getX(), (int)location.getY()-1)))
+            walkableDirections.add(Direction.UP);
+
+        if (gridWorld.IsWalkable(new Point((int)location.getX(), (int)location.getY()+1)))
+            walkableDirections.add(Direction.DOWN);
+
+        return walkableDirections;
     }
 }

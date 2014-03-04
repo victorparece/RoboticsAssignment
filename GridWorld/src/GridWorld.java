@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.io.*;
+import java.util.ArrayList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,6 +13,8 @@ public class GridWorld
 {
 
     private GridLocation[][] gridWorld;
+    private int worldWidth;
+    private int worldHeight;
 
     private static int gridSize = 10;
 
@@ -45,6 +48,8 @@ public class GridWorld
                 line = br.readLine();
             }
 
+            this.worldHeight = worldHeight;
+            this.worldWidth = worldWidth;
             char[] gridWorldString = sb.toString().toCharArray();
 
             gridWorld = new GridLocation[worldHeight][worldWidth];
@@ -61,10 +66,19 @@ public class GridWorld
                 //If the end of line is reached, move to next yLocation
                 if (gridWorldString[i] == '\n')
                     yLocation++;
-                //If the character is not '0', the location is walkable
-                else if (gridWorldString[i] != '0')
-                    gridWorld[yLocation][i].SetWalkability(true);
+                //If the character is '1', the location is walkable
+                else if (gridWorldString[i] == '1')
+                    gridWorld[yLocation][i%(worldWidth+1)].SetWalkability(true);
             }
+
+            /*
+            //Print the representation of gridWorld
+            for (int i = 0; i < gridWorld.length; i++)
+            {
+                for (int j = 0; j < gridWorld[i].length; j++)
+                    System.out.print(gridWorld[i][j].toString());
+                System.out.println();
+            }*/
 
         } catch (IOException e)
         {
@@ -81,5 +95,54 @@ public class GridWorld
     public boolean IsWalkable(Point location)
     {
         return gridWorld[(int)location.getY()][(int)location.getX()].IsWalkable();
+    }
+
+    /**
+     * Get the GridWorld width
+     * @return Returns the width of the GridWorld
+     */
+    public int GetWidth()
+    {
+        return this.worldWidth;
+    }
+
+    /**
+     * Get the GridWorld height
+     * @return Returns the height of the GridWorld
+     */
+    public int GetHeight()
+    {
+        return this.worldHeight;
+    }
+
+    /**
+     * Get the coordinates of all locations in the GridWorld
+     * @return Returns a list of all locations in the GridWorld
+     */
+    public ArrayList<Point> GetAllLocations()
+    {
+        ArrayList<Point> allLocations = new ArrayList<Point>();
+        for (int y = 0; y < gridWorld.length; y++)
+            for (int x = 0; x < gridWorld[y].length; x++)
+                allLocations.add(new Point(x, y));
+
+        return allLocations;
+    }
+
+    /**
+     * Gets a printable representation of the GridWorld
+     */
+    public char[][] GetRepresentation()
+    {
+        char[][] representation = new char[worldHeight][worldWidth];
+
+        for (int i = 0; i < gridWorld.length; i++)
+            for (int j = 0; j < gridWorld[i].length; j++)
+                if (gridWorld[i][j].IsWalkable())
+                    representation[i][j] = '1';
+                else
+                    representation[i][j] = '0';
+
+        return representation;
     }
 }
