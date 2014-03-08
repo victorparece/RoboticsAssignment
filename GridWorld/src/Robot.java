@@ -18,7 +18,7 @@ public class Robot
     /**
      * Directions that may be travelled by the robot
      */
-    public enum Direction
+    public static enum Direction
     {
         UP, DOWN, LEFT, RIGHT
     }
@@ -26,7 +26,7 @@ public class Robot
     /**
      * Defines if robot movement is Deterministic or Stochastic
      */
-    public enum WorldType
+    public static enum WorldType
     {
         DETERMINISTIC, STOCHASTIC
     }
@@ -88,37 +88,53 @@ public class Robot
             //70% change to take requested action
         }
 
+        //Compute the new location of the robot based on the current location and move direction
+        Point newLocation = GetNewLocation(gridWorld, location, direction);
+
         //Move the robot in the selected direction as long as this direction is walkable
+        if (!gridWorld.IsWalkable(newLocation))
+            return false;
+        else
+            location = newLocation;
+
+        return true;
+    }
+
+    /**
+     * Computes the new location of the robot based on the current location, move direction, and grid world
+     * @param gridWorld
+     * @param currentLocation
+     * @param direction
+     * @return Returns the new location of the robot after the move
+     */
+    public static Point GetNewLocation(GridWorld gridWorld, Point currentLocation, Direction direction)
+    {
         Point newLocation;
+
         switch (direction)
         {
             case UP:
-                newLocation = new Point((int)location.getX(), (int)location.getY()-1);
-                if (!gridWorld.IsWalkable(newLocation))
-                    return false;
+                newLocation = new Point((int)currentLocation.getX(), (int)currentLocation.getY()-1);
                 break;
             case DOWN:
-                newLocation = new Point((int)location.getX(), (int)location.getY()+1);
-                if (!gridWorld.IsWalkable(newLocation))
-                    return false;
+                newLocation = new Point((int)currentLocation.getX(), (int)currentLocation.getY()+1);
                 break;
             case LEFT:
-                newLocation = new Point((int)location.getX()-1, (int)location.getY());
-                if (!gridWorld.IsWalkable(newLocation))
-                    return false;
+                newLocation = new Point((int)currentLocation.getX()-1, (int)currentLocation.getY());
                 break;
             case RIGHT:
-                newLocation = new Point((int)location.getX()+1, (int)location.getY());
-                if (!gridWorld.IsWalkable(newLocation))
-                    return false;
+                newLocation = new Point((int)currentLocation.getX()+1, (int)currentLocation.getY());
                 break;
             //This should never happen
             default:
-                newLocation = location;
+                newLocation = currentLocation;
         }
 
-        location = newLocation;
-        return true;
+        //If the location is not walkable, the new location is the current location
+        if (!gridWorld.IsWalkable(newLocation))
+            return currentLocation;
+
+        return newLocation;
     }
 
     /**
@@ -149,6 +165,15 @@ public class Robot
      * @return Returns a list of adjacent walkable directions
      */
     public ArrayList<Direction> GetWalkableDirections()
+    {
+        return GetWalkableDirections(gridWorld, location);
+    }
+
+    /**
+     * Gets all walkable directions adjacent to the current location
+     * @return Returns a list of adjacent walkable directions
+     */
+    public static ArrayList<Direction> GetWalkableDirections(GridWorld gridWorld, Point location)
     {
         ArrayList<Direction> walkableDirections = new ArrayList<Direction>();
 

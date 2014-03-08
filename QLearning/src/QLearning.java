@@ -1,8 +1,5 @@
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +10,9 @@ import java.util.Random;
  */
 public class QLearning
 {
+    private static Robot.WorldType worldType = Robot.WorldType.STOCHASTIC;
+    private static ExplorationPolicy explorationPolicy = ExplorationPolicy.GreedyWithExplorationBonus;
+
     //TODO: Determine appropriate values for these variables
     private static int TOTAL_EPISODES = 200;
     private static double LEARNING_RATE = .1;
@@ -24,6 +24,14 @@ public class QLearning
 
     private static boolean INCLUDE_DEBUG_INFO = false;
 
+    /**
+     * Enumeration of possible Exploration Policies
+     */
+    private static enum ExplorationPolicy
+    {
+        GreedyWithExplorationBonus,
+        Random
+    }
     /**
      * Main class for using Q-Learning
      * @param args
@@ -38,25 +46,32 @@ public class QLearning
         PrintRepresentation(gridWorld, null, goalLocation);
 
         Map<StateActionPair, Double> QTable = new HashMap<StateActionPair, Double>();
+        Map<Point, Integer> ExplorationTable = new HashMap<Point, Integer>();
 
-        //Add StateActionPair to Q-Table for each combination of GridWorld location and direction
+        //Add StateActionPair to Q-Table and Exploration-Table for each valid combination of
+        //GridWorld locations and directions
         ArrayList<Point> gridWorldLocations = gridWorld.GetAllLocations();
         for(Point point : gridWorldLocations)
         {
-            //Only walkable points will have StateActionPairs. Actions may be added that attempt
-            //to go into a non-walkable location, if this action occurs it will result in a NOP.
+            //Only walkable points
             if (gridWorld.IsWalkable(point))
             {
-                QTable.put(new StateActionPair(point, Robot.Direction.UP), 0.0);
-                QTable.put(new StateActionPair(point, Robot.Direction.DOWN), 0.0);
-                QTable.put(new StateActionPair(point, Robot.Direction.LEFT), 0.0);
-                QTable.put(new StateActionPair(point, Robot.Direction.RIGHT), 0.0);
+                //Add new state to exploration table
+                ExplorationTable.put(point, 0);
+
+                //Only available actions for the given point
+                ArrayList<Robot.Direction> walkableDirections = Robot.GetWalkableDirections(gridWorld, point);
+
+                //Create state action pair for each point/action combination
+                for (Robot.Direction direction : walkableDirections)
+                    QTable.put(new StateActionPair(point, direction), 0.0);
             }
         }
 
         //Loop for episodes
         for (int episode = 0; episode < TOTAL_EPISODES; episode++)
         {
+            //Robot has random start location
             Robot robot = new Robot(gridWorld);
             StateActionPair previousStateActionPair = null;
 
@@ -66,37 +81,75 @@ public class QLearning
                 PrintRepresentation(gridWorld, robot, goalLocation);
             }
 
+            //Loop for time steps
             for(int timeStep = 0; timeStep < TOTAL_TIMESTEPS; timeStep++)
             {
-                /*
-                //The robot is in the learning period, take exploratory policy
-                if (timeStep < LEARNING_PERIOD)
-                {
-
-                }
-                */
-
                 //Get current location of robot
                 Point robotLocation = robot.GetLocation();
+
+                //Update the visit count for the current State
+                ExplorationTable.put(robotLocation, ExplorationTable.get(robotLocation)+1);
 
                 //Get all available actions
                 ArrayList<Robot.Direction> walkableDirections = robot.GetWalkableDirections();
 
-                //Choose random action
-                Robot.Direction currentAction = walkableDirections.get(random.nextInt(walkableDirections.size()));
+                //Select action using selected Exploration Policy
+                Robot.Direction currentAction = null;
+                switch (explorationPolicy)
+                {
+                    case GreedyWithExplorationBonus:
+                        //Find maximum number of times a State has been visited
+                        int maxVisitCount = Collections.max(ExplorationTable.values()) + 1;
+                        double maxQTableValue = Collections.max(QTable.values()) + 1;
+
+                        double maxValue = -1;
+                        for (Robot.Direction direction : walkableDirections)
+                        {
+                            StateActionPair stateActionPair = new StateActionPair(robotLocation, direction);
+                            double qValue = QTable.get(stateActionPair)/maxQTableValue;
+                            double explorationValue = 1 - (double)ExplorationTable.get(Robot.GetNewLocation(gridWorld, robotLocation, direction))/(double)maxVisitCount;
+                            double score = qValue + explorationValue;
+
+                            //System.out.println(stateActionPair + " Exploration: " + explorationValue + " QValue: " + qValue);
+
+                            if (score > maxValue)
+                            {
+                                currentAction = direction;
+                                maxValue = score;
+                            }
+                        }
+                        break;
+                    case Random:
+                        currentAction = walkableDirections.get(random.nextInt(walkableDirections.size()));
+                        break;
+                    default:
+                        System.out.println("Exploration Policy not implemented.");
+                        System.exit(0);
+                }
 
                 //Take action
-                robot.Move(currentAction, Robot.WorldType.DETERMINISTIC);
+                robot.Move(currentAction, worldType);
+
+                //The world is stochastic, make sure the new state matches the requested state
+                if (worldType == Robot.WorldType.STOCHASTIC)
+                {
+                    //The new robot location is not equal to the requested robot location
+                    if (!robot.GetLocation().equals(Robot.GetNewLocation(gridWorld, robotLocation, currentAction)))
+                    {
+                        //Find the actual direction the robot moved
+                        for (Robot.Direction direction : walkableDirections)
+                            if (robot.GetLocation().equals(Robot.GetNewLocation(gridWorld, robotLocation, direction)))
+                                currentAction = direction;
+                    }
+                }
+
+                previousStateActionPair = new StateActionPair(robotLocation, currentAction);
 
                 if (INCLUDE_DEBUG_INFO)
                 {
                     System.out.println("---- Time Step:" + timeStep + " ----");
                     PrintRepresentation(gridWorld, robot, goalLocation);
                 }
-
-                //TODO: If this is stochastic, a check needs to be done here to make sure the previousStateActionPair is correct
-
-                previousStateActionPair = new StateActionPair(robotLocation, currentAction);
 
                 //Update the Q-Table
                 if (previousStateActionPair != null)
