@@ -63,4 +63,12 @@ public class StateActionPair
     {
         return "(" + (int)location.getX() + "," + (int)location.getY() + ")-" + direction;
     }
+
+    /**
+     * Returns the location of the state action pair
+     */
+    public Point GetLocation()
+    {
+        return location;
+    }
 }
