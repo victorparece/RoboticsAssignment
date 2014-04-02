@@ -12,8 +12,8 @@ public class Visualization extends JFrame implements ActionListener
     private static int sizeX = 500;
     private static int sizeY = 500;
 
-    //private static String file = "A*Planner-Trial0.txt";
-    private static String file = "A*Planner-Trial1.txt";
+    private static String file = "A*Planner-Trial0.txt";
+    //private static String file = "A*Planner-Trial1.txt";
     //private static String file = "QLearning-Trial0.txt";
     //private static String file = "QLearning-Trial1.txt";
 

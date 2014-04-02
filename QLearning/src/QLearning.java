@@ -18,7 +18,7 @@ public class QLearning
     //TODO: Determine appropriate values for these variables
     private static int TOTAL_EPISODES = 200;
     private static double LEARNING_RATE = .1;
-    private static double DISCOUNT_FACTOR = .5;
+    private static double DISCOUNT_FACTOR = 1;//.5;
     private static int TOTAL_TIMESTEPS = 150;
     private static int LEARNING_PERIOD = 50;
     private static int GOAL_STATE_REWARD = 100;
@@ -172,7 +172,7 @@ public class QLearning
         //Learning complete, try to reach goal location from 2 random starts
         for (int trial = 0; trial < 2; trial++)
         {
-            Robot robot = new Robot(gridWorld);
+            Robot robot = new Robot(gridWorld, new Point(1, 7));
             int counter = 0;
 
             try

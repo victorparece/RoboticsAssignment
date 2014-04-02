@@ -1,3 +1,5 @@
+import org.omg.CORBA.Environment;
+
 import java.awt.*;
 import java.io.File;
 import java.io.PrintWriter;
@@ -25,7 +27,7 @@ public class AStarPlanner
                 PrintWriter pw = new PrintWriter(new File("A*Planner-Trial" + trial + ".txt"), "UTF-8");
 
                 //Robot has random start location
-                Robot robot = new Robot(gridWorld);
+                Robot robot = new Robot(gridWorld, new Point(14, 4));
 
                 Comparator<ExplorationPoint> comparator = new ExplorationPointComparator();
                 PriorityQueue<ExplorationPoint> openQueue = new PriorityQueue<ExplorationPoint>(10, comparator);
@@ -117,8 +119,73 @@ public class AStarPlanner
                     pw.write("---- Final Solution with Path ----" + System.lineSeparator());
                     PrintRepresentationToFile(pw, gridWorld, goalLocation, robot, openQueue, closedSet);
                 }
-
                 pw.close();
+
+                //Print f, g, h values to file
+                PrintWriter pwFGH = new PrintWriter(new File("A*PlannerFGH.txt"), "UTF-8");
+                for (int j = 0; j < gridWorld.GetHeight(); j++)
+                {
+                    for (int z = 0; z < 4; z++)
+                    {
+                        for (int i = 0; i < gridWorld.GetWidth(); i++)
+                        {
+                            Point currentPoint = new Point(i, j);
+                            ExplorationPoint foundPoint = null;
+                            boolean found = false;
+                            for (ExplorationPoint ep : openQueue)
+                                if ((currentPoint).equals(ep.GetPoint()))
+                                {
+                                    foundPoint = ep;
+                                    break;
+                                }
+                            for (ExplorationPoint ep : closedSet)
+                                if ((currentPoint).equals(ep.GetPoint()))
+                                {
+                                    foundPoint = ep;
+                                    break;
+                                }
+
+                            if (foundPoint != null)
+                            {
+                                switch (z)
+                                {
+                                    case 0:
+                                        pwFGH.write("("+i+","+j+")     ");
+                                        break;
+                                    case 1:
+                                        pwFGH.write("F:" + String.format("%2.1f    ", foundPoint.GetFValue()));
+                                        break;
+                                    case 2:
+                                        pwFGH.write("G:" + String.format("%2.1f    ", foundPoint.GetGValue()));
+                                        break;
+                                    case 3:
+                                        pwFGH.write("H:" + String.format("%2.1f    ", foundPoint.GetHValue()));
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                switch (z)
+                                {
+                                    case 0:
+                                        pwFGH.write("("+i+","+j+")     ");
+                                        break;
+                                    case 1:
+                                        pwFGH.write("          ");
+                                        break;
+                                    case 2:
+                                        pwFGH.write("          ");
+                                        break;
+                                    case 3:
+                                        pwFGH.write("          ");
+                                        break;
+                                }
+                            }
+                        }
+                        pwFGH.write(System.lineSeparator());
+                    }
+                }
+                pwFGH.close();
             }
             catch (Exception e) {}
         }

@@ -53,6 +53,11 @@ public class ExplorationPoint
         return gValue;
     }
 
+    public double GetHValue()
+    {
+        return hValue;
+    }
+
     public Point GetPoint()
     {
         return location;
